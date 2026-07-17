@@ -1,22 +1,33 @@
 # docs/
 
-Usage guides and examples for **netbox-atw**.
+User + contributor documentation for **netbox-atw** — the Atw NetBox plugin
+for bulk import and population tooling.
 
-This directory is populated as features land. Each usage guide targets one
-real-world scenario and shows the full path: ingest → map → validate →
-create/update, with copy-pasteable examples.
+## Usage guides
 
-## Planned guides
+- [bulk-import.md](bulk-import.md) — full bulk-import walkthrough (the first
+  shipped scenario: Device population).
+- [examples/worked-examples.md](examples/worked-examples.md) — copy-pasteable
+  datasets for the import wizard.
+- [examples/devices.csv](examples/devices.csv) — minimal starter dataset.
+- [api.md](api.md) — REST API reference for the `ImportJob` audit model.
+- [adding-an-importer.md](adding-an-importer.md) — how to add a new target
+  to the model-agnostic importer framework.
+- [RELEASING.md](RELEASING.md) — release runbook (first PyPI release
+  requires CEO sign-off).
 
-- [ ] `bulk-import.md` — the first bulk import scenario (depends on ATW-4)
-- [ ] `examples/` — worked example datasets and mappings (depends on ATW-4)
-- [ ] `RELEASING.md` — release runbook (depends on ATW-3 / ATW-5)
-- [ ] `compatibility-matrix.md` — NetBox × Python matrix (depends on ATW-3 / ATW-5)
+## Top-level docs
+
+- [../README.md](../README.md) — install, features, quick usage
+- [../CHANGELOG.md](../CHANGELOG.md) — release history
+- [../CONTRIBUTING.md](../CONTRIBUTING.md) — how to contribute
+- [../CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) — community standards
+- [../SECURITY.md](../SECURITY.md) — reporting vulnerabilities
 
 ## Guide template
 
-When you add a guide, follow this shape so docs stay consistent and a new user
-can complete the task from the guide alone:
+When you add a scenario guide, follow this shape so a new user can complete
+the task from the guide alone:
 
 ```
 # <Scenario name>

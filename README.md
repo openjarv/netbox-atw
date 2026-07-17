@@ -1,31 +1,50 @@
 # netbox-atw
 
-The Atw [NetBox](https://netbox.dev) plugin — bulk import and population tooling that reduces the friction of getting real-world data into NetBox.
+The **Atw** [NetBox](https://netbox.dev) plugin — bulk import and population
+tooling that reduces the friction of getting real-world data into NetBox.
 
-> **Status:** early development (pre-release). The plugin scaffold and the first bulk-import feature are being built in parallel (ATW-3, ATW-4). Anything marked `<!-- TODO(ATW-x) -->` below is pending a sibling task and will be filled in once that work lands.
+The first shipped feature is a **bulk import wizard**: paste CSV/TSV data with
+human-readable foreign-key references (e.g. `Site=AMS01`, `Manufacturer=Cisco`)
+instead of NetBox primary keys, preview the exact create/update/skip outcome
+as a dry run, then commit. Every run (dry-run or real) is recorded as an
+**ImportJob** so you can audit population history from the NetBox UI or the
+REST API. New importers are added via a small, model-agnostic spec — see
+[Adding a new importer](#adding-a-new-importer).
 
-## Why
-
-Populating NetBox from real-world sources is the single biggest friction point the community reports. Atw attacks that friction directly: a focused plugin that ingests messy real-world data, maps it to NetBox's model, validates it, and creates/updates records with clear feedback — instead of hand-keyed CSV rows and bespoke scripts.
+> **Status:** 0.1.0 (pre-release). Not yet on PyPI — install from source for
+> now. First PyPI release requires CEO sign-off (see [RELEASING](docs/RELEASING.md)).
 
 ## Features
 
-- **Bulk import / population tooling** — <!-- TODO(ATW-4): one-line feature summary once the first scenario is defined -->
-- Standard NetBox plugin install (pip + `PLUGINS`)
-- REST API exposure following NetBox plugin conventions
-- Tests against a NetBox dev instance across the compatibility matrix
-- <!-- TODO(ATW-4): additional feature bullets -->
+- Bulk import wizard: paste → dry-run preview → commit
+- Foreign keys resolved by **name**, not NetBox PK
+- Create-vs-update decided by a natural key (e.g. `name + site` for devices)
+- Per-row validation and error reporting; valid rows commit even when other
+  rows error
+- **ImportJob** audit model: every run (dry-run or real) is recorded with
+  per-row detail, summary counts, and the raw input — viewable in the NetBox
+  UI and REST API
+- REST API for ImportJob at `/api/plugins/atw/import-jobs/`
+- Model-agnostic importer framework (`netbox_atw.importer`) for future
+  scenarios
+- First scenario: **Device** population
+
+## Compatibility
+
+| NetBox | Python | Status |
+|--------|--------|--------|
+| >= 3.5 | 3.10, 3.11, 3.12 | Tested in CI (matrix finalized in ATW-5) |
+
+`min_version = "3.5.0"` is set in `AtwConfig` (`netbox_atw/__init__.py`).
 
 ## Installation
 
-> The package name and PyPI availability are pending ATW-3 (packaging) and CEO sign-off on the first release. The steps below follow the standard NetBox plugin install pattern and will be verified against the shipped scaffold.
-
 ```bash
-<!-- TODO(ATW-3): replace `netbox-atw` with the verified package name once pyproject lands -->
 pip install netbox-atw
 ```
 
-Add the plugin to your NetBox configuration (`/etc/netbox/configuration.py`):
+Add the plugin to your NetBox configuration
+(`/etc/netbox/configuration.py`):
 
 ```python
 PLUGINS = [
@@ -33,67 +52,142 @@ PLUGINS = [
 ]
 ```
 
-Run database migrations and restart NetBox:
+Run database migrations (the plugin ships `0001_initial` for the
+`ImportJob` audit model):
 
 ```bash
 cd /opt/netbox
 python manage.py migrate
+```
+
+Restart NetBox services:
+
+```bash
 sudo systemctl restart netbox netbox-rq
 ```
 
+> After install on a new NetBox version, run
+> `python manage.py makemigrations netbox_atw` to reconcile any
+> `NetBoxModel` base-field drift, then commit the generated migration.
+
 ## Configuration
 
-<!-- TODO(ATW-4): document any `PLUGINS_CONFIG` options once the import feature defines its configuration surface -->
+No required configuration. Optional `PLUGINS_CONFIG` (no keys yet; reserved
+for future import defaults):
 
 ```python
 PLUGINS_CONFIG = {
-    "netbox_atw": {
-        # <!-- TODO(ATW-4): configuration options -->
-    },
+    "netbox_atw": {},
 }
 ```
 
-## Usage
+## Usage — bulk import devices
 
-### Bulk import
+1. Navigate to **Plugins → Atw → New Import** in the NetBox sidebar.
+2. Pick a target (today: `device`) and paste your data. The first row must be a
+   header. Use names for FK columns:
 
-<!-- TODO(ATW-4): end-to-end usage walkthrough for the first real-world scenario — ingest, map, validate, create/update. -->
+   ```csv
+   Name,Site,Manufacturer,Device Type,Role,Serial
+   rtr01,AMS01,Cisco,Catalyst 9300,Router,SER001
+   rtr02,AMS01,Cisco,Catalyst 9300,Router,SER002
+   sw01,FR01,Juniper,EX4400-48T,Switch,SER003
+   ```
+
+3. Click **Preview import**. You get a per-row table showing `create` /
+   `update` / `skip` / `error` and any error messages — with **no data
+   written**. A dry-run ImportJob is recorded for audit.
+4. Review, then click **Commit**. You're redirected to the ImportJob detail
+   page showing the committed outcome, per-row detail, and the raw input.
+
+See [docs/bulk-import.md](docs/bulk-import.md) for the full walkthrough and
+[docs/examples/](docs/examples/) for worked datasets.
+
+### Audit history
+
+Every run (preview or commit) creates an **ImportJob** visible under
+**Plugins → Atw → Import Jobs**, with summary counts, per-row detail, the raw
+input, and a timestamp. The same data is available via the REST API:
 
 ```bash
-# <!-- TODO(ATW-4): example CLI / API call once the import feature is defined -->
+curl -s http://netbox/api/plugins/atw/import-jobs/ | jq
 ```
 
-### REST API
+See [docs/api.md](docs/api.md) for the full API reference.
 
-<!-- TODO(ATW-4): API path, example curl calls, request/response shapes -->
+### Device columns
 
-## Compatibility
+| Header        | Required | FK resolved by | Notes |
+|---------------|----------|----------------|-------|
+| Name          | yes      | —              | device name |
+| Site          | yes      | `Site.name`    | |
+| Manufacturer  | yes      | `Manufacturer.name` | |
+| Device Type   | yes      | `DeviceType.model` | |
+| Role          | yes      | `DeviceRole.name` | |
+| Tenant        | no       | `Tenant.name`  | |
+| Platform      | no       | `Platform.name`| |
+| Serial        | no       | —              | |
+| Asset Tag     | no       | —              | |
+| Status        | no       | —              | defaults to `active` |
+| Comments      | no       | —              | |
 
-Atw targets the current NetBox release and tracks the official NetBox support window. The full matrix (NetBox versions × Python versions) is established and maintained on ATW-3 and ATW-5.
+A device is updated (vs created) when an existing device matches the natural
+key `name + site`.
 
-<!-- TODO(ATW-3): fill in the verified compatibility matrix once packaging lands -->
+## Adding a new importer
 
-| NetBox | Python | Status |
-|--------|--------|--------|
-| <!-- TODO(ATW-3) --> | <!-- TODO(ATW-3) --> | <!-- TODO(ATW-3) --> |
+The importer framework is model-agnostic. To add a new target, register an
+`ImportSpec` in `netbox_atw/import_specs.py`:
+
+```python
+from .importer import Column, ImportSpec
+
+MY_SPEC = ImportSpec(
+    name="my_thing",
+    model="app.Model",
+    description="...",
+    natural_key=("name",),
+    columns=[
+        Column(field="name", header="Name", required=True),
+        Column(field="site", header="Site", fk_lookup_field="name", fk_model="dcim.Site"),
+    ],
+)
+
+SPECS["my_thing"] = MY_SPEC
+```
+
+It then appears in the wizard's target list automatically. See
+[docs/adding-an-importer.md](docs/adding-an-importer.md) for the full guide.
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor guide (local dev environment, lint, tests, release flow).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor guide.
 
 Quick start:
 
 ```bash
 git clone https://github.com/openjarv/netbox-atw.git
 cd netbox-atw
-# <!-- TODO(ATW-3): install dev extras and local NetBox dev env setup once packaging lands -->
+pip install -e ".[dev]"
+black --check . && isort --check-only . && flake8 .
+pytest
 ```
+
+Tests require a NetBox development environment. Unit tests in
+`tests/test_importer.py` cover pure-Python parts (no NetBox DB required);
+integration tests in `tests/test_importer_integration.py` run against a
+NetBox dev instance and exercise the full create/update/skip/error path and
+the UI wizard.
 
 ## Documentation
 
+- [docs/bulk-import.md](docs/bulk-import.md) — full bulk-import usage guide
+- [docs/examples/](docs/examples/) — worked example datasets
+- [docs/api.md](docs/api.md) — REST API reference
+- [docs/adding-an-importer.md](docs/adding-an-importer.md) — extending the importer
+- [docs/RELEASING.md](docs/RELEASING.md) — release runbook
 - [CHANGELOG.md](CHANGELOG.md) — release history
 - [CONTRIBUTING.md](CONTRIBUTING.md) — how to contribute
-- [docs/](docs/) — usage guides and examples (populated as features land)
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — community standards
 
 ## Support

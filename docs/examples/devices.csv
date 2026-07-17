@@ -1,0 +1,5 @@
+Name,Site,Manufacturer,Device Type,Role,Serial
+rtr01,AMS01,Cisco,Catalyst 9300,Router,SER001
+rtr02,AMS01,Cisco,Catalyst 9300,Router,SER002
+sw01,AMS01,Cisco,Catalyst 9300,Switch,SER003
+fw01,FR01,Palo Alto,PA-440,Firewall,SER004
