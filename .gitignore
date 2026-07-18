@@ -1,34 +1,22 @@
-# Byte-compiled / optimized
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Distribution / packaging
-build/
-dist/
 *.egg-info/
 *.egg
-
-# Virtual environments
+build/
+dist/
+.eggs/
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
 .venv/
 venv/
 env/
-
-# IDE
+*.sqlite3
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# Testing
-.pytest_cache/
-htmlcov/
-.coverage
-coverage.xml
-
-# Docs build
-site/
-
-# OS
 .DS_Store
-Thumbs.db

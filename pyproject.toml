@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netbox-atw"
+version = "0.1.0"
+description = "Atw NetBox plugin — bulk import and population tooling that reduces the friction of getting real-world data into NetBox."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+    {name = "Atw", email = "engineering@atw.dev"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Django",
+    "Intended Audience :: System Administrators",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Networking",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.0,<25",
+    "flake8>=7.0,<8",
+    "isort>=5.13,<6",
+    "pytest>=8.0,<9",
+    "pytest-django>=4.8,<5",
+]
+
+[project.entry-points."netbox.plugins"]
+netbox_atw = "netbox_atw:config"
+
+[tool.setuptools.packages.find]
+include = ["netbox_atw*"]
+
+[tool.setuptools.package-data]
+netbox_atw = ["templates/netbox_atw/*.html"]
+
+[tool.black]
+line-length = 120
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.pytest.ini_options]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+testpaths = ["netbox_atw/tests"]

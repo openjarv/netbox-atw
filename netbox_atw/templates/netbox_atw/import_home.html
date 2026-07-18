@@ -1,0 +1,44 @@
+{% extends "base/base.html" %}
+{% load helpers %}
+
+{% block title %}Atw Bulk Import{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <div class="panel panel-default">
+      <div class="panel-heading"><strong>Atw Bulk Import</strong></div>
+      <div class="panel-body">
+        <p>Reduce the friction of populating NetBox. Pick a target, paste real-world data (CSV/TSV with names, not IDs), preview, then commit.</p>
+        <ul>
+          {% for spec in specs %}
+            <li><a href="{% url 'plugins:netbox_atw:import_start' %}?spec={{ spec.name }}">{{ spec.name }}</a> — {{ spec.description }}</li>
+          {% endfor %}
+        </ul>
+        <a class="btn btn-primary" href="{% url 'plugins:netbox_atw:import_start' %}">Start an import</a>
+        <a class="btn btn-default" href="{% url 'plugins:netbox_atw:importjob_list' %}">View import jobs</a>
+      </div>
+    </div>
+    {% if recent_jobs %}
+    <div class="panel panel-default">
+      <div class="panel-heading"><strong>Recent import jobs</strong></div>
+      <table class="table table-condensed panel-body">
+        <thead><tr><th>ID</th><th>Spec</th><th>Status</th><th>Dry run</th><th>Summary</th><th>Run at</th></tr></thead>
+        <tbody>
+          {% for job in recent_jobs %}
+            <tr>
+              <td><a href="{% url 'plugins:netbox_atw:importjob' pk=job.pk %}">{{ job.pk }}</a></td>
+              <td>{{ job.spec }}</td>
+              <td>{{ job.get_status_display }}</td>
+              <td>{{ job.dry_run|yesno:"Yes,No" }}</td>
+              <td>{{ job.summary|placeholder }}</td>
+              <td>{{ job.created }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
