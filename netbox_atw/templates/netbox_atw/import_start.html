@@ -1,0 +1,24 @@
+{% extends 'base/base.html' %}
+{% load helpers %}
+
+{% block title %}Atw — New Import{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 col-md-offset-2">
+    <h2>New Atw Import</h2>
+    <p class="text-muted">
+      Paste your data. Pick a target NetBox object type and paste CSV/TSV data. The first row must be a header.
+      Foreign-key columns use human-readable names (e.g. <code>Site</code>, <code>Manufacturer</code>) — not NetBox PKs.
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      {% render_form form %}
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary">Preview Import</button>
+        <a href="{% url 'plugins:netbox_atw:importjob_list' %}" class="btn btn-default">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

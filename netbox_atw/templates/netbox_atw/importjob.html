@@ -1,0 +1,43 @@
+{% extends 'base/base.html' %}
+{% load helpers %}
+
+{% block title %}{{ object }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="pull-right">
+      <a href="{% url 'plugins:netbox_atw:importjob_edit' pk=object.pk %}" class="btn btn-warning">
+        <span class="mdi mdi-pencil"></span> Edit
+      </a>
+      <a href="{% url 'plugins:netbox_atw:importjob_delete' pk=object.pk %}" class="btn btn-danger">
+        <span class="mdi mdi-trash-can-outline"></span> Delete
+      </a>
+    </div>
+    <h2>{{ object }}</h2>
+    <ul class="nav nav-tabs" role="tablist">
+      <li role="presentation" class="active"><a href="#main" role="tab" data-toggle="tab">Import Job</a></li>
+    </ul>
+    <div class="tab-content">
+      <div role="tabpanel" class="tab-pane active" id="main">
+        <div class="panel panel-default">
+          <div class="panel-heading"><strong>Import Job</strong></div>
+          <table class="table table-hover panel-body attr-table">
+            <tr><td>Spec</td><td>{{ object.spec }}</td></tr>
+            <tr><td>Status</td><td>{{ object.get_status_display }}</td></tr>
+            <tr><td>Dry run</td><td>{{ object.dry_run|yesno|title }}</td></tr>
+            <tr><td>Delimiter</td><td>{{ object.delimiter }}</td></tr>
+            <tr><td>Summary</td><td>{{ object.summary }}</td></tr>
+            <tr><td>Created</td><td>{{ object.created_count }}</td></tr>
+            <tr><td>Updated</td><td>{{ object.updated_count }}</td></tr>
+            <tr><td>Skipped</td><td>{{ object.skipped_count }}</td></tr>
+            <tr><td>Errored</td><td>{{ object.errored_count }}</td></tr>
+            <tr><td>Created</td><td>{{ object.created|placeholder }}</td></tr>
+            <tr><td>Last updated</td><td>{{ object.last_updated|placeholder }}</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
